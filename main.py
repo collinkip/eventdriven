@@ -1,3 +1,6 @@
+import json
+
+import consumers
 from fastapi import FastAPI,Request
 from fastapi.middleware.cors import CORSMiddleware
 from redis_om import get_redis_connection, HashModel
@@ -38,8 +41,10 @@ class Event(HashModel):
 @app.post('/deliveries/create')
 async def create(request:Request):
     body =await request.json()
-    delivery=Delivery(budget=body['data']['budget'],notes=body['data']['budget']).save()
-    return delivery
+    delivery=Delivery(budget=body['data']['budget'],notes=body['data']['notes']).save()
+    event =Event(delivery_id=delivery.pk ,type=body['type'],data=json.dumps(body['data'])).save()
+    state=consumers.create_delivery({},event)
+    return state
 
 
 
