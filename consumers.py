@@ -11,6 +11,7 @@ def create_delivery(state, event):
     }
 
 
+
 def start_delivery(state, event):
     return state | {
         "status": "active"
