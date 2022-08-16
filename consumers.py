@@ -1,5 +1,7 @@
 import json
 
+from fastapi import HTTPException
+
 
 def create_delivery(state, event):
     data = json.loads(event.data)
@@ -12,6 +14,9 @@ def create_delivery(state, event):
 
 
 def start_delivery(state, event):
+    if state['status'] != 'ready':
+        raise HTTPException(status_code=400, detail='Delivery already started')
+
     return state | {
         "status": "active"
     }
@@ -29,8 +34,22 @@ def pickup_products(state, event):
     }
 
 
+def deliver_products(state, event):
+    data = json.loads(event.data)
+
+    new_budget = state["budget"] + int(data['sell_price']) * int(data['quantity'])
+    new_quantity = state["quantity"] - int(data["quantity"])
+    return state | {
+        "budget": new_budget,
+        "sell_price": int(data["sell_price"]),
+        "quantity": new_quantity,
+        "status": "completed"
+    }
+
+
 CONSUMER = {
     "CREATE_DELIVERY": create_delivery,
     "START_DELIVERY": start_delivery,
     "PICKUP_PRODUCTS": pickup_products,
+    "DELIVER_PRODUCTS": deliver_products
 }
